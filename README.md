@@ -1,37 +1,62 @@
-## Welcome to GitHub Pages
+---
+---
 
-You can use the [editor on GitHub](https://github.com/eddieimada/test/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+# Description
+This repository hosts all the code used in the FC-R2 paper by Imada et al. 2018.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+All data necessary to reproduce these analysis can be obtained in https://jhubiostatistics.shinyapps.io/recount/
 
-### Markdown
+## How to use
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+Data is available as a RangeSummarizedObject (RSE) which can be loaded in R enviroment using the SummarizedExperiment package.
+Raw data is available as overall base coverage at gene level.
 
-```markdown
-Syntax highlighted code block
+Data can be used as is, or scaled by the number of mapped reads and read length or AUC to get read-counts like data. For more information about processing data see:
 
-# Header 1
-## Header 2
-### Header 3
+*Collado-Torres, Leonardo, Abhinav Nellore, and Andrew E. Jaffe. "recount workflow: Accessing over 70,000 human RNA-seq samples with Bioconductor." F1000Research 6 (2017).*
 
-- Bulleted
-- List
+```{r}
+### Load required libraries
+library(SummarizedExperiment)
+library(recount)
 
-1. Numbered
-2. List
+### Load data
+data <- "path/to/data"
+load(data)
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+### Scale data
+scaled_data <- scale_counts(rse, by="auc")
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+For huge datasets (e.g. TCGA or GTEX) you might want to subset only data relevant to your work (e.g. cancer type) to reduce the amount of computational resource used.
 
-### Jekyll Themes
+```{r}
+### Load required libraries
+library(SummarizedExperiment)
+library(recount)
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/eddieimada/test/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Load TCGA data
+load(TCGA.rda)
 
-### Support or Contact
+### Extract counts matrix
+rseCounts <- assays(TCGA)$counts
+rownames(rseCounts) <- rowRanges(rse_scaled)$ID
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+### Creating list of pheno data splited by cancer type
+pheno <- as.data.frame(colData(TCGA))
+phenoList <- split(pheno,pheno$gdc_cases.project.project_id)
+
+### Check number of samples and projects available
+table(pheno$gdc_cases.project.project_id)
+
+### Create expression sets for a cancer type
+x <- "TCGA_BRCA"
+exp <- matrix[,rownames(phenoList[[x]])]
+pheno <- phenoList[[x]]
+eset <- ExpressionSet(assayData <- exp,
+                      phenoData = AnnotatedDataFrame(pheno),
+                      featureData= AnnotatedDataFrame(fdata))
+```
+
+## Citation
+If you used any of the code or dataset available please cite:
